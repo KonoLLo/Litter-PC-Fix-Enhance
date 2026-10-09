@@ -1,10 +1,10 @@
 {
   "name": "小小PC-修复增强",
   "nickName": {
-    "en": "Litter PC - Fix & Enhance",
-    "cn": "小小PC - 修复增强"
+    "en": "Litter-PC-Fix-Enhance",
+    "cn": "小小PC-修复增强"
   },
-  "version": "1.0.0",
+  "version": "1.02",
   "styleFileList": ["style.css"],
   "scriptFileList": ["floating_sprite.js"],
   "tweeFileList": ["settings.twee"],
