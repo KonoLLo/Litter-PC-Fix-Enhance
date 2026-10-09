@@ -5,6 +5,9 @@
 一个为 *Degrees of Lewdity* 打造的角色立绘模组
 
 小小PC-修复增强基于 [小小PC](https://github.com/ANLINSTUDIO/Degrees-of-Lewdity-DolLitterPC) 模组修改。
+
+原模组作者：[ANLINSTUDIO](https://github.com/ANLINSTUDIO)
+
 原模组不兼容「前景背景模组」，会连带背景一起显示，阻挡视野，本模组已修复该问题。
 
 <img width="480" height="362" alt="微信图片_20261009222138_2_10" src="https://github.com/user-attachments/assets/ae520209-4dae-4d8a-a8ee-9b1f0e00906c" />
@@ -23,3 +26,7 @@
 ## 确保已安装依赖模组
 
 - [秋风白桦框架](https://github.com/MaplebirchLeaf/SCML-DOL-maplebirchframework) `>=5.0.0`
+
+## 许可
+
+本项目采用 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) 许可协议。
