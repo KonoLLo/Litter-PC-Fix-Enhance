@@ -12,18 +12,20 @@ window.FloatingSprite = window.FloatingSprite || {};
   var PET_MIN_SCALE = 0.5;
   var PET_MAX_SCALE = 1.0;
 
-  // 默认遮罩参数
-  var DEFAULT_PET_MASK = 128;
-  var DEFAULT_PET_ROTATION = 0;
+  var FIXED_PET_MASK = 128;
+  var DEFAULT_PET_CLIP_LEFT = 0;
+  var DEFAULT_PET_CLIP_RIGHT = 0;
 
-  // ==================== 状态 ====================
+  var MAX_CLIP_LEFT = 58;
+  var MAX_CLIP_RIGHT = 48;
+
   FloatingSprite.DEFAULTS = {
     enabled: true,
     clickThrough: false,
     scale: 0.85,
     showBackground: false,
-    petMask: DEFAULT_PET_MASK,
-    petRotation: DEFAULT_PET_ROTATION,
+    petClipLeft: DEFAULT_PET_CLIP_LEFT,
+    petClipRight: DEFAULT_PET_CLIP_RIGHT,
     pos: { left: -1, top: -1 }
   };
 
@@ -42,11 +44,14 @@ window.FloatingSprite = window.FloatingSprite || {};
       data = Object.assign({}, FloatingSprite.DEFAULTS);
     }
     data.scale = clamp(+data.scale || 0.85, MIN_SCALE, MAX_SCALE);
-    data.petMask = clamp(parseInt(data.petMask, 10) || DEFAULT_PET_MASK, 18, 128);
-    data.petRotation = clamp(parseInt(data.petRotation, 10) || DEFAULT_PET_ROTATION, -90, 90);
+    data.petClipLeft = clamp(parseInt(data.petClipLeft, 10) || 0, 0, MAX_CLIP_LEFT);
+    data.petClipRight = clamp(parseInt(data.petClipRight, 10) || 0, 0, MAX_CLIP_RIGHT);
     data.showBackground = !!data.showBackground;
     data.clickThrough = !!data.clickThrough;
     if (!data.pos || typeof data.pos !== 'object') data.pos = { left: -1, top: -1 };
+    if (data.petClipLeft > 0 && data.petClipRight > 0) {
+      data.petClipRight = 0;
+    }
     FloatingSprite.data = data;
   };
 
@@ -62,7 +67,6 @@ window.FloatingSprite = window.FloatingSprite || {};
     };
   })();
 
-  // ==================== 运行时 ====================
   var container = null;
   var bgCanvas = null;
   var dragging = false;
@@ -75,7 +79,6 @@ window.FloatingSprite = window.FloatingSprite || {};
   var DRAG_THRESHOLD_PX = 3;
   var DRAG_THRESHOLD_MS = 180;
 
-  // ==================== 框架桌宠 ====================
   function getPetContainer() {
     return document.getElementById('maplebirch-character-pet');
   }
@@ -107,6 +110,25 @@ window.FloatingSprite = window.FloatingSprite || {};
     }
   }
 
+  function applyClipToPet(el) {
+    if (!el) return;
+    var d = FloatingSprite.data;
+    var l = d.petClipLeft || 0;
+    var r = d.petClipRight || 0;
+    if (l === 0 && r === 0) {
+      el.style.clipPath = '';
+      return;
+    }
+    el.style.clipPath = 'inset(0 ' + r + '% 0 ' + l + '%)';
+  }
+
+  function syncClipCheckboxes() {
+    var lEl = document.getElementById('fs-clip-left-check');
+    var rEl = document.getElementById('fs-clip-right-check');
+    if (lEl) lEl.checked = FloatingSprite.data.petClipLeft >= MAX_CLIP_LEFT;
+    if (rEl) rEl.checked = FloatingSprite.data.petClipRight >= MAX_CLIP_RIGHT;
+  }
+
   function applyToPet() {
     var el = getPetContainer();
     if (!el) return;
@@ -118,9 +140,7 @@ window.FloatingSprite = window.FloatingSprite || {};
     if (opts) {
       opts.enabled = wantPet;
       opts.scale = clamp(data.scale, PET_MIN_SCALE, PET_MAX_SCALE);
-      // ★ 直接使用我们保存的遮罩值
-      opts.mask = data.petMask;
-      opts.rotation = data.petRotation;
+      opts.mask = FIXED_PET_MASK;
     }
 
     if (wantPet) {
@@ -131,6 +151,8 @@ window.FloatingSprite = window.FloatingSprite || {};
 
     el.classList.toggle('fs-locked', !!data.clickThrough);
 
+    applyClipToPet(el);
+
     if (data.pos.left >= 0 && data.pos.top >= 0) {
       el.style.left = data.pos.left + 'px';
       el.style.top  = data.pos.top + 'px';
@@ -139,6 +161,7 @@ window.FloatingSprite = window.FloatingSprite || {};
     }
 
     callPetSync();
+    syncClipCheckboxes();
   }
 
   function syncPosFromPet() {
@@ -155,7 +178,6 @@ window.FloatingSprite = window.FloatingSprite || {};
     FloatingSprite.updatePanelPos();
   }
 
-  // ==================== 我们的 canvas ====================
   function createContainer() {
     if (container || !document.body) return;
 
@@ -183,7 +205,6 @@ window.FloatingSprite = window.FloatingSprite || {};
     FloatingSprite.data.pos.top  = parseInt(container.style.top,  10) || 0;
 
     bindDrag();
-    bindWheel();
   }
 
   function setPos(l, t) {
@@ -219,7 +240,6 @@ window.FloatingSprite = window.FloatingSprite || {};
     applyToPet();
   }
 
-  // ==================== 拖拽 + 穿透 ====================
   function bindDrag() {
     container.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mousemove', onMouseMove);
@@ -317,29 +337,6 @@ window.FloatingSprite = window.FloatingSprite || {};
     endDrag(t ? { clientX: t.clientX, clientY: t.clientY } : null);
   }
 
-  // ==================== 滚轮缩放 ====================
-  function bindWheel() {
-    container.addEventListener('wheel', function (e) {
-      var d = FloatingSprite.data;
-      if (!d.enabled || d.clickThrough || !d.showBackground) return;
-      e.preventDefault();
-      var delta = e.deltaY > 0 ? -0.05 : 0.05;
-      d.scale = Math.round(clamp(d.scale + delta, MIN_SCALE, MAX_SCALE) * 20) / 20;
-      saveDebounced();
-      container.style.transform = 'scale(' + d.scale + ')';
-      renderFrame();
-      syncSliderUI();
-    }, { passive: false });
-  }
-
-  function syncSliderUI() {
-    var range = document.getElementById('fs-scale-range');
-    if (range) range.value = FloatingSprite.data.scale;
-    var val = document.getElementById('fs-scale-val');
-    if (val) val.textContent = FloatingSprite.data.scale.toFixed(2);
-  }
-
-  // ==================== 渲染 ====================
   function isDrawable(el) {
     if (!el) return false;
     if (typeof HTMLCanvasElement !== 'undefined' && el instanceof HTMLCanvasElement) return true;
@@ -409,7 +406,6 @@ window.FloatingSprite = window.FloatingSprite || {};
     if (syncId) { cancelAnimationFrame(syncId); syncId = null; }
   }
 
-  // ==================== 对外 setter ====================
   FloatingSprite.setEnabled = function (v) {
     FloatingSprite.data.enabled = !!v;
     FloatingSprite.saveSettings();
@@ -462,26 +458,31 @@ window.FloatingSprite = window.FloatingSprite || {};
     FloatingSprite.saveSettings();
     if (container) container.style.transform = 'scale(' + FloatingSprite.data.scale + ')';
     applyToPet();
-    syncSliderUI();
     renderFrame();
   };
 
-  // ★ 新增：遮罩分割线
-  FloatingSprite.setPetMask = function (v) {
-    FloatingSprite.data.petMask = clamp(+v || 0, 18, 128);
+  FloatingSprite.setPetClipLeft = function (v) {
+    if (v) {
+      FloatingSprite.data.petClipLeft = MAX_CLIP_LEFT;
+      FloatingSprite.data.petClipRight = 0;
+    } else {
+      FloatingSprite.data.petClipLeft = 0;
+    }
     FloatingSprite.saveSettings();
     applyToPet();
-    var val = document.getElementById('fs-mask-val');
-    if (val) val.textContent = FloatingSprite.data.petMask;
+    syncClipCheckboxes();
   };
 
-  // ★ 新增：遮罩旋转角度
-  FloatingSprite.setPetRotation = function (v) {
-    FloatingSprite.data.petRotation = clamp(+v || 0, -90, 90);
+  FloatingSprite.setPetClipRight = function (v) {
+    if (v) {
+      FloatingSprite.data.petClipRight = MAX_CLIP_RIGHT;
+      FloatingSprite.data.petClipLeft = 0;
+    } else {
+      FloatingSprite.data.petClipRight = 0;
+    }
     FloatingSprite.saveSettings();
     applyToPet();
-    var val = document.getElementById('fs-rotation-val');
-    if (val) val.textContent = FloatingSprite.data.petRotation;
+    syncClipCheckboxes();
   };
 
   FloatingSprite.resetPos = function () {
@@ -521,26 +522,23 @@ window.FloatingSprite = window.FloatingSprite || {};
       var wrapper = document.createElement('div');
       content.appendChild(wrapper);
       $(wrapper).wiki('<<floatingSpriteModSetting>>');
+      setTimeout(syncClipCheckboxes, 0);
     } catch (e) {}
   };
 
-  // ==================== 初始化 ====================
   function init() {
     if (!document.body) { setTimeout(init, 100); return; }
 
     FloatingSprite.loadSettings();
     createContainer();
 
-    // 首次强制把框架桌宠的遮罩改为我们的值
     var opts = getPetOptions();
     if (opts) {
-      opts.mask = FloatingSprite.data.petMask;
-      opts.rotation = FloatingSprite.data.petRotation;
+      opts.mask = FIXED_PET_MASK;
     }
 
     applyAll();
 
-    // 定期从桌宠同步位置 + 强制覆盖框架选项
     setInterval(function () {
       if (!FloatingSprite.data.enabled) return;
       if (!FloatingSprite.data.showBackground) {
@@ -556,16 +554,13 @@ window.FloatingSprite = window.FloatingSprite || {};
             opts2.scale = desiredScale;
             callPetSync();
           }
-          // 强制覆盖遮罩（防止用户在框架设置页调整）
-          if (opts2.mask !== FloatingSprite.data.petMask) {
-            opts2.mask = FloatingSprite.data.petMask;
-            callPetSync();
-          }
-          if (opts2.rotation !== FloatingSprite.data.petRotation) {
-            opts2.rotation = FloatingSprite.data.petRotation;
+          if (opts2.mask !== FIXED_PET_MASK) {
+            opts2.mask = FIXED_PET_MASK;
             callPetSync();
           }
         }
+        var petEl = getPetContainer();
+        if (petEl) applyClipToPet(petEl);
       }
     }, 500);
 
