@@ -20,8 +20,7 @@
 
 ## 依赖
 
-- ModLoader `^2.31.2`
-- TweeReplacer `^1.0.0`
-- maplebirch `>=5.0.0`
+- [秋风白桦框架](https://github.com/MaplebirchLeaf/SCML-DOL-maplebirchframework) `>=5.0.0`
 
-原小小PC模组仓库：https://github.com/ANLINSTUDIO/Degrees-of-Lewdity-DolLitterPC
+### 原小小PC模组仓库：
+- https://github.com/ANLINSTUDIO/Degrees-of-Lewdity-DolLitterPC
