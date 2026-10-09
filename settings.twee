@@ -10,8 +10,7 @@
 <<widget "floatingSpriteModSetting">>
 	<<set _fs to FloatingSprite.data>>
 	<div class="p-2 text-align-center">
-		<h3>小小PC-修复增强 <<print window.modSC2DataManager?.getModLoader()?.getModZip("小小PC-修复增强")?.modInfo?.version ?? "未知版本">></h3>
-		<div class="m-2">可拖拽、可缩放、可点击穿透的小小PC</div>
+		<h3>小小PC-修复增强</h3>
 	</div>
 
 	<div class="settingsGrid">
@@ -19,9 +18,9 @@
 		<div class="settingsToggleItem">
 			<label>
 				<<= `<input type="checkbox" ${_fs.enabled ? 'checked' : ''} onchange="FloatingSprite.setEnabled(this.checked)">`>>
-				启用小小PC
+				模型开关
 			</label>
-			<span class="tooltip-anchor linkBlue" tooltip="勾选后在游戏界面上显示悬浮角色立绘。">(?)</span>
+			<span class="tooltip-anchor linkBlue" tooltip="勾选后在游戏界面上显示角色模型立绘。">(?)</span>
 		</div>
 
 		<div class="settingsToggleItem">
@@ -29,7 +28,23 @@
 				<<= `<input type="checkbox" ${_fs.clickThrough ? 'checked' : ''} onchange="FloatingSprite.setClickThrough(this.checked)">`>>
 				点击穿透并固定位置
 			</label>
-			<span class="tooltip-anchor linkBlue" tooltip="勾选后小小PC不再会影响你点击她身后的按钮，同时固定当前位置禁止移动。">(?)</span>
+			<span class="tooltip-anchor linkBlue" tooltip="勾选后模型不再阻挡点击事件，同时锁定模型位置禁止拖拽。">(?)</span>
+		</div>
+
+		<div class="settingsToggleItem">
+			<label>
+				<<= `<input type="checkbox" id="fs-clip-left-check" ${_fs.petClipLeft >= 58 ? 'checked' : ''} onchange="FloatingSprite.setPetClipLeft(this.checked)">`>>
+				仅特写
+			</label>
+			<span class="tooltip-anchor linkBlue" tooltip="勾选后只显示特写。">(?)</span>
+		</div>
+
+		<div class="settingsToggleItem">
+			<label>
+				<<= `<input type="checkbox" id="fs-clip-right-check" ${_fs.petClipRight >= 48 ? 'checked' : ''} onchange="FloatingSprite.setPetClipRight(this.checked)">`>>
+				仅模型
+			</label>
+			<span class="tooltip-anchor linkBlue" tooltip="勾选后只显示模型。">(?)</span>
 		</div>
 
 		<div class="settingsToggleItem">
@@ -40,13 +55,11 @@
 		</div>
 
 		<div class="settingsToggleItemWide">
-			显示背景
-			<span class="tooltip-anchor linkBlue" tooltip="仅小人：不再和前景背景模组冲突，加载了前景背景也不显示。显示背景：连同前景背景一起显示。">(?)</span>
-			<br>
+			前景背景
 			<div class="fs-modes">
 				<label class="fs-mode-item<<if !_fs.showBackground>> active<</if>>">
 					<<= `<input type="radio" name="fs-mode" value="character" ${!_fs.showBackground ? 'checked' : ''} onchange="FloatingSprite.setShowBackground(false)">`>>
-					仅小人
+					隐藏背景
 				</label>
 				<label class="fs-mode-item<<if _fs.showBackground>> active<</if>>">
 					<<= `<input type="radio" name="fs-mode" value="full" ${_fs.showBackground ? 'checked' : ''} onchange="FloatingSprite.setShowBackground(true)">`>>
@@ -57,35 +70,13 @@
 
 		<div class="settingsToggleItemWide">
 			缩放倍率（0.5 ~ 1.0）
-			<span class="tooltip-anchor linkBlue" tooltip="调整小小PC大小。">(?)</span>
+			<span class="tooltip-anchor linkBlue" tooltip="调整模型大小。">(?)</span>
 			<div class="fs-scale-row">
 				<<= `<input type="range" id="fs-scale-range" min="0.5" max="1.0" step="0.05" value="${_fs.scale}"
 					oninput="FloatingSprite.setScale(parseFloat(this.value))">`>>
 				<span class="fs-scale-val" id="fs-scale-val"><<print _fs.scale.toFixed(2)>></span>
 			</div>
 			<input type="button" value="重设" onclick='FloatingSprite.setScale(1)'/>
-		</div>
-
-		<div class="settingsToggleItemWide">
-			遮罩分割线
-			<span class="tooltip-anchor linkBlue" tooltip="调整遮罩分割线位置，128会连特写框一起显示。(只作用于仅小人模式)">(?)</span>
-			<div class="fs-scale-row">
-				<<= `<input type="range" id="fs-mask-range" min="18" max="128" step="1" value="${_fs.petMask}"
-					oninput="FloatingSprite.setPetMask(parseInt(this.value, 10))">`>>
-				<span class="fs-scale-val" id="fs-mask-val"><<print _fs.petMask>></span>
-			</div>
-			<input type="button" value="重设" onclick='FloatingSprite.setPetMask(128)'/>
-		</div>
-
-		<div class="settingsToggleItemWide">
-			遮罩旋转角度
-			<span class="tooltip-anchor linkBlue" tooltip="调整遮罩旋转角度，0° 为不旋转。(只作用于仅小人模式)">(?)</span>
-			<div class="fs-scale-row">
-				<<= `<input type="range" id="fs-rotation-range" min="-90" max="90" step="1" value="${_fs.petRotation}"
-					oninput="FloatingSprite.setPetRotation(parseInt(this.value, 10))">`>>
-				<span class="fs-scale-val" id="fs-rotation-val"><<print _fs.petRotation>></span>
-			</div>
-			<input type="button" value="重设" onclick='FloatingSprite.setPetRotation(0)'/>
 		</div>
 
 	</div>
