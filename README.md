@@ -4,9 +4,7 @@
 
 一个为 *Degrees of Lewdity* 打造的角色立绘模组
 
-小小PC-修复增强基于 [小小PC](https://github.com/ANLINSTUDIO/Degrees-of-Lewdity-DolLitterPC) 模组修改。
-
-原模组作者：[ANLINSTUDIO](https://github.com/ANLINSTUDIO)
+小小PC-修复增强基于 [小小PC](https://github.com/ANLINSTUDIO/Degrees-of-Lewdity-DolLitterPC) 模组修改。原模组作者：[ANLINSTUDIO](https://github.com/ANLINSTUDIO)
 
 原模组不兼容「前景背景模组」，会连带背景一起显示，阻挡视野，本模组已修复该问题。
 
