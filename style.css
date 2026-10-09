@@ -20,12 +20,10 @@
   user-select: none;
 }
 
-/* 隐藏框架桌宠 */
 #maplebirch-character-pet.fs-hidden {
   display: none !important;
 }
 
-/* 锁定框架桌宠（点击穿透） */
 #maplebirch-character-pet.fs-locked {
   pointer-events: none !important;
 }
