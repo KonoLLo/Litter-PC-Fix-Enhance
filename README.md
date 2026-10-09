@@ -4,8 +4,10 @@
 
 一个为 *Degrees of Lewdity* 打造的角色立绘模组
 
-<img width="480" height="362" alt="微信图片_20261009222138_2_10" src="https://github.com/user-attachments/assets/ae520209-4dae-4d8a-a8ee-9b1f0e00906c" />
+小小PC-修复增强基于 [小小PC](https://github.com/ANLINSTUDIO/Degrees-of-Lewdity-DolLitterPC) 模组修改。
+原模组不兼容「前景背景模组」，会连带背景一起显示，阻挡视野，本模组已修复该问题。
 
+<img width="480" height="362" alt="微信图片_20261009222138_2_10" src="https://github.com/user-attachments/assets/ae520209-4dae-4d8a-a8ee-9b1f0e00906c" />
 
 ## 功能
 
@@ -18,9 +20,6 @@
 
 > 「仅特写」与「仅模型」互斥，同时只能开启一个。
 
-## 依赖
+## 确保已安装依赖模组
 
 - [秋风白桦框架](https://github.com/MaplebirchLeaf/SCML-DOL-maplebirchframework) `>=5.0.0`
-
-### 原小小PC模组仓库：
-- https://github.com/ANLINSTUDIO/Degrees-of-Lewdity-DolLitterPC
