@@ -4,7 +4,7 @@
     "en": "Litter-PC-Fix-Enhance",
     "cn": "小小PC-修复增强"
   },
-  "version": "1.02",
+  "version": "1.4.0",
   "styleFileList": ["style.css"],
   "scriptFileList": ["floating_sprite.js"],
   "tweeFileList": ["settings.twee"],
@@ -17,8 +17,8 @@
       "params": [
         {
           "passage": "overlayReplace",
-          "findRegex": "<<optionsinformation>><<\\/replace>>[\\s\\S]*?<<\\/button>>",
-          "regexFlag": "g",
+          "findRegex": "<<optionsinformation>>\\s*<<\\/replace>>[\\s\\S]*?<<\\/button>>",
+          "regexFlag": "",
           "replace": "<<optionsinformation>><</replace>>\n\t\t<</button>><<floatingSpriteModTab>>"
         }
       ]
@@ -27,6 +27,6 @@
   "dependenceInfo": [
     { "modName": "ModLoader", "version": "^2.31.2" },
     { "modName": "TweeReplacer", "version": "^1.0.0" },
-    { "modName": "maplebirch", "version": ">=5.0.0" }
+    { "modName": "maplebirch", "version": ">=5.4.0 <6.0.0" }
   ]
 }
