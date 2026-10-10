@@ -1,71 +1,71 @@
-#floating-sprite {
+/* 小小PC-修复增强
+ * 结构：#litterpc-pet 负责定位与显隐，内部
+ *   #litterpc-bg      背景模式画布
+ *   #litterpc-pet-host 框架渲染出的角色模型（框架会加 .maplebirch-character-pet 类）
+ * 框架只写 host 的 width/height/overflow/mask，定位与显隐始终由这里控制。
+ */
+
+#litterpc-pet {
   position: fixed;
-  z-index: 998;
   top: 0;
   left: 0;
+  z-index: 998;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
   touch-action: none;
-  will-change: left, top, transform;
-  transform-origin: top left;
 }
-#floating-sprite.dragging { cursor: grabbing; }
-#floating-sprite.locked   { cursor: default; }
 
-#floating-sprite > canvas {
-  display: block;
+#litterpc-pet.litterpc-dragging { cursor: grabbing; }
+
+/* 勾选“点击穿透并固定位置”后整块不接收任何指针事件 */
+#litterpc-pet.litterpc-locked {
+  pointer-events: none;
+  cursor: default;
+}
+
+#litterpc-bg,
+#litterpc-pet-host {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#litterpc-bg {
   pointer-events: none;
   user-select: none;
 }
 
-#maplebirch-character-pet.fs-hidden {
-  display: none !important;
-}
+/* 注意：host 不能写 pointer-events: auto，否则父级 .litterpc-locked 的
+   pointer-events: none 会被子元素重新开启，点击穿透失效。 */
 
-#maplebirch-character-pet.fs-locked {
-  pointer-events: none !important;
-}
-
-.fs-modes {
+/* 面板 */
+.lpc-radio-row {
   display: flex;
-  gap: 10px;
+  gap: 14px;
   flex-wrap: wrap;
   margin: 8px 0;
 }
-.fs-modes > label.fs-mode-item {
+
+.lpc-radio-row > label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
-  border: 1px solid #666;
-  border-radius: 4px;
   cursor: pointer;
   font-weight: normal;
-  opacity: 0.6;
-  background: transparent;
 }
-.fs-modes > label.fs-mode-item.active {
-  opacity: 1;
-  border-color: #aaa;
-  background: rgba(255, 255, 255, 0.08);
-}
-.fs-modes input[type="radio"] { cursor: pointer; margin: 0; }
 
-.fs-scale-row {
+.lpc-radio-row input[type="radio"] {
+  cursor: pointer;
+  margin: 0;
+}
+
+.lpc-scale-row {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 6px 0;
 }
-.fs-scale-row input[type="range"] {
-  flex: 1;
-  cursor: pointer;
-}
-.fs-scale-val {
-  display: inline-block;
-  min-width: 3em;
-  text-align: right;
-  font-weight: bold;
-}
+
+.lpc-scale-row > * { flex: 1; }
