@@ -1,83 +1,84 @@
 :: Setting FloatingSprite [widget]
 
 <<widget "floatingSpriteModTab">>
-	<<button 小小PC>>
+	<<button "小小PC">>
 		<<toggleTab>>
 		<<replace #customOverlayContent>><<floatingSpriteModSetting>><</replace>>
 	<</button>>
 <</widget>>
 
 <<widget "floatingSpriteModSetting">>
-	<<set _fs to FloatingSprite.data>>
-	<div class="p-2 text-align-center">
-		<h3>小小PC-修复增强</h3>
-	</div>
+	<<if typeof FloatingSprite is "object">>
+		<<run FloatingSprite.ensure()>>
 
-	<div class="settingsGrid">
-
-		<div class="settingsToggleItem">
-			<label>
-				<<= `<input type="checkbox" ${_fs.enabled ? 'checked' : ''} onchange="FloatingSprite.setEnabled(this.checked)">`>>
-				模型开关
-			</label>
-			<span class="tooltip-anchor linkBlue" tooltip="勾选后在游戏界面上显示角色模型立绘。">(?)</span>
+		<div class="p-2 text-align-center">
+			<h3>小小PC-修复增强</h3>
 		</div>
 
-		<div class="settingsToggleItem">
-			<label>
-				<<= `<input type="checkbox" ${_fs.clickThrough ? 'checked' : ''} onchange="FloatingSprite.setClickThrough(this.checked)">`>>
-				点击穿透并固定位置
-			</label>
-			<span class="tooltip-anchor linkBlue" tooltip="勾选后模型不再阻挡点击事件，同时锁定模型位置禁止拖拽。">(?)</span>
-		</div>
+		<div class="settingsGrid">
 
-		<div class="settingsToggleItem">
-			<label>
-				<<= `<input type="checkbox" id="fs-clip-left-check" ${_fs.petClipLeft >= 58 ? 'checked' : ''} onchange="FloatingSprite.setPetClipLeft(this.checked)">`>>
-				仅特写
-			</label>
-			<span class="tooltip-anchor linkBlue" tooltip="勾选后只显示特写。">(?)</span>
-		</div>
-
-		<div class="settingsToggleItem">
-			<label>
-				<<= `<input type="checkbox" id="fs-clip-right-check" ${_fs.petClipRight >= 48 ? 'checked' : ''} onchange="FloatingSprite.setPetClipRight(this.checked)">`>>
-				仅模型
-			</label>
-			<span class="tooltip-anchor linkBlue" tooltip="勾选后只显示模型。">(?)</span>
-		</div>
-
-		<div class="settingsToggleItem">
-			当前位置&nbsp;
-			<span id="fs-pos-label">X=<<print _fs.pos.left>>, Y=<<print _fs.pos.top>></span>
-			&nbsp;&nbsp;
-			<input type="button" value="重置位置" onclick='FloatingSprite.resetPos()'/>
-		</div>
-
-		<div class="settingsToggleItemWide">
-			前景背景
-			<div class="fs-modes">
-				<label class="fs-mode-item<<if !_fs.showBackground>> active<</if>>">
-					<<= `<input type="radio" name="fs-mode" value="character" ${!_fs.showBackground ? 'checked' : ''} onchange="FloatingSprite.setShowBackground(false)">`>>
-					隐藏背景
+			<div class="settingsToggleItem" data-lpc="enabled">
+				<label>
+					<<checkbox "$options.litterpc.enabled" false true autocheck>>
+					模型开关
 				</label>
-				<label class="fs-mode-item<<if _fs.showBackground>> active<</if>>">
-					<<= `<input type="radio" name="fs-mode" value="full" ${_fs.showBackground ? 'checked' : ''} onchange="FloatingSprite.setShowBackground(true)">`>>
-					显示背景
+				<span class="tooltip-anchor linkBlue" tooltip="勾选后在游戏界面上显示角色模型立绘。">(?)</span>
+			</div>
+
+			<div class="settingsToggleItem" data-lpc="clickThrough">
+				<label>
+					<<checkbox "$options.litterpc.clickThrough" false true autocheck>>
+					点击穿透并固定位置
 				</label>
+				<span class="tooltip-anchor linkBlue" tooltip="勾选后模型不再阻挡点击事件，同时锁定模型位置禁止拖拽。">(?)</span>
 			</div>
-		</div>
 
-		<div class="settingsToggleItemWide">
-			缩放倍率（0.5 ~ 1.0）
-			<span class="tooltip-anchor linkBlue" tooltip="调整模型大小。">(?)</span>
-			<div class="fs-scale-row">
-				<<= `<input type="range" id="fs-scale-range" min="0.5" max="1.0" step="0.05" value="${_fs.scale}"
-					oninput="FloatingSprite.setScale(parseFloat(this.value))">`>>
-				<span class="fs-scale-val" id="fs-scale-val"><<print _fs.scale.toFixed(2)>></span>
+			<div class="settingsToggleItemWide" data-lpc="clip">
+				显示范围
+				<span class="tooltip-anchor linkBlue" tooltip="完整、仅特写、仅模型三选一，与秋枫白桦框架的同名设置互不影响。">(?)</span>
+				<div class="lpc-radio-row">
+					<label><<radiobutton "$options.litterpc.clip" "full" autocheck>> 完整</label>
+					<label><<radiobutton "$options.litterpc.clip" "closeUp" autocheck>> 仅特写</label>
+					<label><<radiobutton "$options.litterpc.clip" "modelOnly" autocheck>> 仅模型</label>
+				</div>
 			</div>
-			<input type="button" value="重设" onclick='FloatingSprite.setScale(1)'/>
-		</div>
 
-	</div>
+			<div class="settingsToggleItemWide">
+				当前位置&nbsp;
+				<span class="lpc-pos">X=<<print FloatingSprite.pos.left>>, Y=<<print FloatingSprite.pos.top>></span>
+				&nbsp;&nbsp;
+				<<button "重置位置">>
+					<<run FloatingSprite.resetPos()>>
+				<</button>>
+			</div>
+
+			<div class="settingsToggleItemWide" data-lpc="mode">
+				前景背景
+				<div class="lpc-radio-row">
+					<label><<radiobutton "$options.litterpc.mode" "character" autocheck>> 隐藏背景</label>
+					<label><<radiobutton "$options.litterpc.mode" "background" autocheck>> 显示背景</label>
+				</div>
+			</div>
+
+			<div class="settingsToggleItemWide">
+				缩放倍率
+				<span class="tooltip-anchor linkBlue" tooltip="调整模型大小，范围 50% ~ 100%。">(?)</span>
+				<div class="lpc-scale-row">
+					<<numberslider "$options.litterpc.scale" $options.litterpc.scale 0.5 1 0.05 {
+						onInputChange: value => { FloatingSprite.changed('scale'); },
+						value: v => `${Math.round(v * 100)}%`
+					}>>
+				</div>
+				<<button "重设">>
+					<<run FloatingSprite.set('scale', 1)>>
+				<</button>>
+			</div>
+
+		</div>
+	<<else>>
+		<div class="p-2 text-align-center">
+			<h3>小小PC-修复增强</h3>
+			<p>未找到 FloatingSprite 脚本，请确认本模组已随 ModLoader 正常加载。</p>
+		</div>
+	<</if>>
 <</widget>>
