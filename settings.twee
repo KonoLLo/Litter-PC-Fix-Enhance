@@ -54,6 +54,7 @@
 
 			<div class="settingsToggleItemWide" data-lpc="mode">
 				前景背景
+				<span class="tooltip-anchor linkBlue" tooltip="两种模式都会按实际画出来的内容裁掉画布四周的透明空白，浮窗大小就等于那张画面本身：显示背景时是侧栏画面，隐藏背景时是角色模型。裁边靠读像素量出来，量不到（刚进局、画布还没画）时先按原来的正方形显示。">(?)</span>
 				<div class="lpc-radio-row">
 					<label><<radiobutton "$options.litterpc.mode" "character" autocheck>> 隐藏背景</label>
 					<label><<radiobutton "$options.litterpc.mode" "background" autocheck>> 显示背景</label>
@@ -62,7 +63,7 @@
 
 			<div class="settingsToggleItemWide">
 				缩放倍率
-				<span class="tooltip-anchor linkBlue" tooltip="调整模型大小，范围 50% ~ 100%。">(?)</span>
+				<span class="tooltip-anchor linkBlue" tooltip="调整显示大小，范围 50% ~ 100%。100% 就是画面自己的原始像素大小。">(?)</span>
 				<div class="lpc-scale-row">
 					<<numberslider "$options.litterpc.scale" $options.litterpc.scale 0.5 1 0.05 {
 						onInputChange: value => { FloatingSprite.changed('scale'); },
@@ -70,8 +71,32 @@
 					}>>
 				</div>
 				<<button "重设">>
-					<<run FloatingSprite.set('scale', 1)>>
+					<<run FloatingSprite.set('scale', 0.85)>>
 				<</button>>
+			</div>
+
+			<div class="settingsToggleItemWide">
+				透明度
+				<span class="tooltip-anchor linkBlue" tooltip="调整模型的不透明度，范围 10% ~ 100%。留了 10% 的下限，全透明会让你再也找不到它。">(?)</span>
+				<div class="lpc-scale-row">
+					<<numberslider "$options.litterpc.opacity" $options.litterpc.opacity 0.1 1 0.05 {
+						onInputChange: value => { FloatingSprite.changed('opacity'); },
+						value: v => `${Math.round(v * 100)}%`
+					}>>
+				</div>
+				<<button "重设">>
+					<<run FloatingSprite.set('opacity', 1)>>
+				<</button>>
+			</div>
+
+			<div class="settingsToggleItemWide">
+				导出动作动图
+				<span class="tooltip-anchor linkBlue" tooltip="把接下来 2 秒的画面逐帧采集成 GIF 下载。采的是当前模式正在显示的东西：隐藏背景模式采角色模型，显示背景模式采背景图（也就是侧栏画面的拷贝）。两种模式都按量出来的内容框裁掉四周的透明空白，导出大小与浮窗一致。游戏设置里开了侧边栏动画才会有动效，否则导出的是静止画面；导出与你摆的位置和透明度无关。部分手机浏览器不会自动触发下载，这时点结果那行里的保存链接或分享按钮拿文件。">(?)</span>
+				<<button "导出 GIF">>
+					<<run FloatingSprite.exportGif()>>
+				<</button>>
+				<div id="lpc-gif-status" class="lpc-gif-status"></div>
+				<div id="lpc-gif-actions" class="lpc-gif-actions"></div>
 			</div>
 
 		</div>
