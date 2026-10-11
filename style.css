@@ -15,6 +15,9 @@
   -webkit-user-select: none;
   -webkit-user-drag: none;
   touch-action: none;
+  /* 裁边靠这个：wrap 收成内容大小，超出的部分（画布上的透明边）不外溢，
+     也不再吃掉它下面那块点击 */
+  overflow: hidden;
 }
 
 #litterpc-pet.litterpc-dragging { cursor: grabbing; }
@@ -69,3 +72,26 @@
 }
 
 .lpc-scale-row > * { flex: 1; }
+
+/* GIF 导出的进度与结果，面板按钮下面那条小字 */
+.lpc-gif-status {
+  margin-top: 6px;
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+
+/* 结果下面的取文件入口：保存链接 +（支持的浏览器上）分享按钮 + 一句提示。
+   手机端自动下载经常不触发，这条是唯一的兜底，必须一直看得见。 */
+.lpc-gif-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 0.85em;
+}
+
+.lpc-gif-hint {
+  flex-basis: 100%;
+  opacity: 0.75;
+}
