@@ -28,19 +28,17 @@
 			<div class="settingsToggleItem" data-lpc="clickThrough">
 				<label>
 					<<checkbox "$options.litterpc.clickThrough" false true autocheck>>
-					点击穿透并固定位置
+					点击穿透
 				</label>
-				<span class="tooltip-anchor linkBlue" tooltip="勾选后模型不再阻挡点击事件，同时锁定模型位置禁止拖拽。">(?)</span>
+				<span class="tooltip-anchor linkBlue" tooltip="勾选后模型整体不再阻挡点击，手指可以点到它下面的游戏按钮；代价是穿透期间拖不动小人。若万一小人压住了选项入口，先勾上它就能点到面板把它关掉，再拖走小人。与固定位置各自独立，可任意组合。">(?)</span>
 			</div>
 
-			<div class="settingsToggleItemWide" data-lpc="clip">
-				显示范围
-				<span class="tooltip-anchor linkBlue" tooltip="完整、仅特写、仅模型三选一，与秋枫白桦框架的同名设置互不影响。">(?)</span>
-				<div class="lpc-radio-row">
-					<label><<radiobutton "$options.litterpc.clip" "full" autocheck>> 完整</label>
-					<label><<radiobutton "$options.litterpc.clip" "closeUp" autocheck>> 仅特写</label>
-					<label><<radiobutton "$options.litterpc.clip" "modelOnly" autocheck>> 仅模型</label>
-				</div>
+			<div class="settingsToggleItem" data-lpc="positionLocked">
+				<label>
+					<<checkbox "$options.litterpc.positionLocked" false true autocheck>>
+					固定位置
+				</label>
+				<span class="tooltip-anchor linkBlue" tooltip="勾选后锁定小人位置、禁止拖拽，避免误触挪动。与点击穿透各自独立，可任意组合。">(?)</span>
 			</div>
 
 			<div class="settingsToggleItemWide">
@@ -61,11 +59,11 @@
 				</div>
 			</div>
 
-			<div class="settingsToggleItemWide">
+			<div class="settingsToggleItemWide" data-lpc="scale">
 				缩放倍率
-				<span class="tooltip-anchor linkBlue" tooltip="调整显示大小，范围 50% ~ 100%。100% 就是画面自己的原始像素大小。">(?)</span>
+				<span class="tooltip-anchor linkBlue" tooltip="调整显示大小，范围 50% ~ 150%。100% 就是画面自己的原始像素大小。">(?)</span>
 				<div class="lpc-scale-row">
-					<<numberslider "$options.litterpc.scale" $options.litterpc.scale 0.5 1 0.05 {
+					<<numberslider "$options.litterpc.scale" $options.litterpc.scale 0.5 1.5 0.05 {
 						onInputChange: value => { FloatingSprite.changed('scale'); },
 						value: v => `${Math.round(v * 100)}%`
 					}>>
@@ -75,7 +73,21 @@
 				<</button>>
 			</div>
 
-			<div class="settingsToggleItemWide">
+			<div class="settingsToggleItemWide" data-lpc="clipRange">
+				显示范围
+				<span class="tooltip-anchor linkBlue" tooltip="双向滑条，中点是完整。往右是仅特写，从左往右裁、越往右裁得越多；往左是仅模型，从右往左裁、越往左裁得越多。数值是裁掉那一侧的百分比，0 就是完整。与秋枫白桦框架的同名设置互不影响。">(?)</span>
+				<div class="lpc-scale-row">
+					<<numberslider "$options.litterpc.clipRange" $options.litterpc.clipRange -100 100 1 {
+						onInputChange: value => { FloatingSprite.changed('clipRange'); },
+						value: v => (v > 0 ? `特写(裁左) ${v}%` : (v < 0 ? `模型(裁右) ${-v}%` : `完整`))
+					}>>
+				</div>
+				<<button "重设">>
+					<<run FloatingSprite.set('clipRange', 0)>>
+				<</button>>
+			</div>
+
+			<div class="settingsToggleItemWide" data-lpc="opacity">
 				透明度
 				<span class="tooltip-anchor linkBlue" tooltip="调整模型的不透明度，范围 10% ~ 100%。留了 10% 的下限，全透明会让你再也找不到它。">(?)</span>
 				<div class="lpc-scale-row">
