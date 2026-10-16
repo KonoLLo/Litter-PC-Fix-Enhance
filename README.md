@@ -16,6 +16,7 @@
 - ModLoader `^2.31.2`
 - TweeReplacer `^1.0.0`
 - maplebirch `>=5.0.0`
+- 游戏版本 `>=0.5.11.9`
 
 ## 说明
 
