@@ -1,9 +1,3 @@
-/* 小小PC-修复增强
- * 结构：#litterpc-pet 负责定位与显隐，内部
- *   #litterpc-bg      背景模式画布
- *   #litterpc-pet-host 框架渲染出的角色模型（框架会加 .maplebirch-character-pet 类）
- * 框架只写 host 的 width/height/overflow/mask，定位与显隐始终由这里控制。
- */
 
 #litterpc-pet {
   position: fixed;
@@ -15,15 +9,13 @@
   -webkit-user-select: none;
   -webkit-user-drag: none;
   touch-action: none;
-  /* 裁边靠这个：wrap 收成内容大小，超出的部分（画布上的透明边）不外溢，
-     也不再吃掉它下面那块点击 */
+
   overflow: hidden;
 }
 
 #litterpc-pet.litterpc-dragging { cursor: grabbing; }
 
-/* 勾选“点击穿透并固定位置”后整块不接收任何指针事件 */
-#litterpc-pet.litterpc-locked {
+#litterpc-pet.litterpc-passthru {
   pointer-events: none;
   cursor: default;
 }
@@ -40,10 +32,6 @@
   user-select: none;
 }
 
-/* 注意：host 不能写 pointer-events: auto，否则父级 .litterpc-locked 的
-   pointer-events: none 会被子元素重新开启，点击穿透失效。 */
-
-/* 面板 */
 .lpc-radio-row {
   display: flex;
   gap: 14px;
@@ -73,15 +61,12 @@
 
 .lpc-scale-row > * { flex: 1; }
 
-/* GIF 导出的进度与结果，面板按钮下面那条小字 */
 .lpc-gif-status {
   margin-top: 6px;
   font-size: 0.85em;
   opacity: 0.85;
 }
 
-/* 结果下面的取文件入口：保存链接 +（支持的浏览器上）分享按钮 + 一句提示。
-   手机端自动下载经常不触发，这条是唯一的兜底，必须一直看得见。 */
 .lpc-gif-actions {
   display: flex;
   flex-wrap: wrap;
