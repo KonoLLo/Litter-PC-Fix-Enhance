@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.8.4';
+  var VERSION = '1.9.0';
   var OPTION_KEY = 'litterpc';
   var LS_STATE = 'litterpc.settings';
   var SS_STATE = 'litterpc.settings';
@@ -19,10 +19,34 @@
   var MIN_OPACITY = 0.1;
   var MAX_OPACITY = 1;
 
-  var PET_MASK = 128;
-  var PET_ROTATION = 0;
   var INSET_LEFT = 58;
   var INSET_RIGHT = 48;
+
+
+
+
+
+  var LAYER_EXACT = splitList(
+    'base, basehead, breasts, belly, bellyLeft, bellyRight, leftarm, rightarm, ' +
+    'freckles, ears, eyes, sclera, left_iris, right_iris, eyelids, lashes, brows, mouth, blush, tears, toast, scars, ' +
+    'hair_sides, hair_fringe, hair_extra, pbhair, pbhair_strip, pbhair_balls, ' +
+    'penis, genitals, buttplug, vines'
+  );
+  var LAYER_PREFIX = splitList(
+    'makeup, nipples, breasts, tummy, penis, clit, ear_slime, ' +
+    'wolf, cat, cow, bird, fox, angel, fallen, demon, ' +
+    'writing, drip, cum, ' +
+    'upper, over_upper, lower, over_lower, under_lower, under_upper, ' +
+    'hands, handheld, prop, head, over_head, face, neck, legs, feet'
+  );
+
+
+  var WEATHER_KEYS = splitList(
+    'precipitation, precipitation_back, precipitation_front, temperature, cold_breath, ' +
+    'water, water_back, water_front, water_breath, ' +
+    'fire, fireFront, fire_back, fire_front, petals'
+  );
+  var PET_MODEL_NAME = 'litterpcPet';
 
   var MODE_CHAR = 'character';
   var MODE_BG = 'background';
@@ -54,6 +78,16 @@
 
   function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
+  function splitList(s) {
+    var parts = s.split(',');
+    var out = [];
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i].trim();
+      if (p) out.push(p);
+    }
+    return out;
+  }
+
   function readLS(key) {
     try {
       var raw = localStorage.getItem(key);
@@ -81,25 +115,29 @@
     return V && typeof V === 'object' ? V : null;
   }
 
-  function frameworkPet() {
+
+  function frameworkPetHandle() {
     var mb = window.maplebirch;
-    if (mb && mb.char && mb.char.pet && typeof mb.char.pet.render === 'function') {
+    if (mb && mb.char && mb.char.pet && typeof mb.char.pet.sync === 'function') {
       return mb.char.pet;
     }
     return null;
   }
 
-  function frameworkAnimated() {
+
+  function sidebarAnimOn() {
     var V = sugarV();
     return !!(V && V.options && V.options.sidebarAnimations);
   }
+
+
 
   function gameReady() {
     var R = window.Renderer;
     var S = window.setup;
     if (!R || !S) return true;
     var CM = R.CanvasModels;
-    return !!(CM && (CM.pet || CM.main) && S.clothes);
+    return !!(CM && CM.main && CM.main.layers && S.clothes);
   }
 
   function normalize(obj) {
@@ -443,14 +481,6 @@
     };
   }
 
-  function relinquishPet(pet) {
-    try {
-      pet.container = null;
-      pet.canvas = undefined;
-      pet.model = undefined;
-    } catch (e) {}
-  }
-
   function stopHostAnimation() {
     if (!host) return;
     var c = host.querySelector('canvas');
@@ -462,61 +492,127 @@
     } catch (e) {}
   }
 
-  function invalidatePetCapture() {
-    try {
-      var CM = window.Renderer && window.Renderer.CanvasModels;
+  var selfLayerKept = 0;
+  var selfLayerTotal = 0;
+  var selfStaticFallback = false;
 
-      if (CM && CM.pet) CM.pet = null;
-    } catch (e) {}
+  function petLayerAllowed(name) {
+    if (LAYER_EXACT.indexOf(name) >= 0) return true;
+    for (var i = 0; i < LAYER_PREFIX.length; i++) {
+      var p = LAYER_PREFIX[i];
+      if (name === p || name.indexOf(p + '_') === 0) return true;
+    }
+    return false;
   }
 
-  var petCapturePatched = false;
-  var petLayerRepairs = [];
 
 
 
 
+  function registerSelfPetModel() {
+    var R = window.Renderer;
+    var CM = R && R.CanvasModels;
+    var main = CM && CM.main;
+    if (!main || !main.layers) return false;
 
-  function isShallowOverwrite(def, patched) {
-    if (!def || !patched || def === patched) return false;
-    var dk = Object.keys(def);
-    var pk = Object.keys(patched);
-    if (pk.length === 0 || pk.length >= dk.length) return false;
-    for (var i = 0; i < pk.length; i++) {
-      if (!Object.prototype.hasOwnProperty.call(def, pk[i])) return false;
+    var names = Object.keys(main.layers);
+    var layers = {};
+    var kept = 0;
+    for (var i = 0; i < names.length; i++) {
+      if (!petLayerAllowed(names[i])) continue;
+      layers[names[i]] = main.layers[names[i]];
+      kept++;
     }
+
+    if (!kept) return false;
+
+    selfLayerTotal = names.length;
+    selfLayerKept = kept;
+    CM[PET_MODEL_NAME] = {
+      name: PET_MODEL_NAME,
+      width: main.width,
+      height: main.height,
+      frames: main.frames,
+      metadata: main.metadata,
+      scale: main.scale,
+      generatedOptions: main.generatedOptions,
+      defaultOptions: main.defaultOptions,
+      preprocess: main.preprocess,
+      postprocess: main.postprocess,
+      layers: layers
+    };
     return true;
   }
 
 
 
-  function repairCapturedPetLayers(mainModel) {
-    var CM = window.Renderer && window.Renderer.CanvasModels;
-    var captured = CM && CM.pet;
-    var defs = mainModel && mainModel.layers;
-    if (!captured || !captured.layers || !defs) return;
-    var names = Object.keys(captured.layers);
-    for (var i = 0; i < names.length; i++) {
-      var k = names[i];
-      var patched = captured.layers[k];
-      if (!isShallowOverwrite(defs[k], patched)) continue;
-      captured.layers[k] = Object.assign({}, defs[k], patched);
-      if (petLayerRepairs.indexOf(k) < 0) petLayerRepairs.push(k);
+  function selfPetOptions() {
+    var src = sidebarCacheOptions();
+    if (!src) return null;
+
+    var opts = Object.assign({}, src);
+    var filters = {};
+    var srcFilters = src.filters || {};
+    var keys = Object.keys(srcFilters);
+    for (var i = 0; i < keys.length; i++) {
+      var v = srcFilters[keys[i]];
+      if (Array.isArray(v)) filters[keys[i]] = v.slice(0);
+      else if (v && typeof v === 'object') filters[keys[i]] = Object.assign({}, v);
+      else filters[keys[i]] = v;
     }
+    opts.filters = filters;
+    for (var j = 0; j < WEATHER_KEYS.length; j++) opts[WEATHER_KEYS[j]] = '';
+    return opts;
   }
 
-  function ensurePetCapturePatch() {
-    if (petCapturePatched) return;
-    var pet = frameworkPet();
-    if (!pet || typeof pet.capture !== 'function') return;
-    var orig = pet.capture;
+
+
+
+  function mountSelfCanvas(target, canvas) {
+    var s = displayedSize();
+    target.replaceChildren(canvas);
+    target.style.width = s + 'px';
+    target.style.height = s + 'px';
+    target.style.overflow = 'hidden';
+    canvas.style.width = s + 'px';
+    canvas.style.height = s + 'px';
+    canvas.style.transform = '';
+    canvas.style.imageRendering = 'auto';
+  }
+
+  function drawSelfPet(target) {
+    var R = window.Renderer;
+    if (!R || typeof R.locateModel !== 'function') return false;
+
+    var opts = selfPetOptions();
+    if (!opts) return false;
+    if (!registerSelfPetModel()) return false;
+
+    var model = R.locateModel(PET_MODEL_NAME);
+    if (!model || typeof model.createCanvas !== 'function') return false;
+
+    var co;
     try {
-      pet.capture = function (mainModel) {
-        orig.call(this, mainModel);
-        try { repairCapturedPetLayers(mainModel); } catch (e) {}
-      };
-      petCapturePatched = true;
-    } catch (e) {}
+      co = model.createCanvas(false);
+    } catch (e) { return false; }
+    if (!co || !co.canvas) return false;
+
+    try { model.reset(); } catch (e) { return false; }
+
+    var animated = sidebarAnimOn();
+    selfStaticFallback = false;
+    try {
+      if (animated) model.animate(co, opts, R.defaultListener);
+      else model.render(co, opts, R.defaultListener);
+    } catch (e) {
+
+      if (!animated) return false;
+      try { model.render(co, opts, R.defaultListener); } catch (e2) { return false; }
+      selfStaticFallback = true;
+    }
+
+    mountSelfCanvas(target, co.canvas);
+    return true;
   }
 
   var SIDEBAR_CANVAS_SEL = '#sidebar-img-container canvas.mainCanvas';
@@ -548,7 +644,7 @@
   var sidebarAnimMissed = 0;
 
   function followWanted() {
-    return booted && !isBg() && state.enabled && frameworkAnimated();
+    return booted && !isBg() && state.enabled && sidebarAnimOn();
   }
 
   function isSidebarTarget(ctx) {
@@ -1029,12 +1125,9 @@
   }
 
   function renderCharacter() {
-    var pet = frameworkPet();
-    if (!pet) { scheduleRetry(); return false; }
-
-    ensurePetCapturePatch();
-
     if (!gameReady()) { scheduleRetry(); return false; }
+
+
 
     if (!sidebarCacheOptions()) { scheduleRetry(); return false; }
 
@@ -1045,19 +1138,12 @@
     if (characterMounted() && followAnimHealthy() && !forceRerender &&
         currentMain === lastMainRef && currentSig === lastContentSig) return true;
     stopHostAnimation();
-    invalidatePetCapture();
 
 
 
     var ok = false;
     try {
-      ok = pet.render(host, {
-        floating: false,
-        animated: frameworkAnimated(),
-        mask: PET_MASK,
-        rotation: PET_ROTATION,
-        scale: state.scale
-      });
+      ok = drawSelfPet(host);
     } catch (e) { ok = false; }
 
     if (ok) {
@@ -1067,8 +1153,6 @@
 
       clearRetry();
       resetRetryBudget();
-
-      relinquishPet(pet);
 
       host.style.display = 'block';
       applyClip();
@@ -1124,8 +1208,6 @@
 
   function needsCharacter() {
     if (!booted || isBg() || !state.enabled) return false;
-
-    if (!window.maplebirch) return false;
     return !characterMounted();
   }
 
@@ -1682,6 +1764,71 @@
     return (mb && mb.character && mb.character.pet) || null;
   }
 
+
+
+
+
+
+
+
+  var petCapturePatched = false;
+  var petLayerRepairs = [];
+
+  function isShallowOverwrite(def, patched) {
+    if (!def || !patched || def === patched) return false;
+    var dk = Object.keys(def);
+    var pk = Object.keys(patched);
+    if (pk.length === 0 || pk.length >= dk.length) return false;
+    for (var i = 0; i < pk.length; i++) {
+      if (!Object.prototype.hasOwnProperty.call(def, pk[i])) return false;
+    }
+    return true;
+  }
+
+
+
+  function repairCapturedPetLayers(mainModel) {
+    var CM = window.Renderer && window.Renderer.CanvasModels;
+    var captured = CM && CM.pet;
+    var defs = mainModel && mainModel.layers;
+    if (!captured || !captured.layers || !defs) return;
+    var names = Object.keys(captured.layers);
+    for (var i = 0; i < names.length; i++) {
+      var k = names[i];
+      var patched = captured.layers[k];
+      if (!isShallowOverwrite(defs[k], patched)) continue;
+      captured.layers[k] = Object.assign({}, defs[k], patched);
+      if (petLayerRepairs.indexOf(k) < 0) petLayerRepairs.push(k);
+    }
+  }
+
+  function ensureFrameworkPetRepair() {
+
+
+
+
+
+
+    if (window.maplebirch) {
+      try {
+        var CMR = window.Renderer && window.Renderer.CanvasModels;
+        repairCapturedPetLayers(CMR && CMR.main);
+      } catch (e) {}
+    }
+
+    if (petCapturePatched) return;
+    var pet = window.maplebirch && window.maplebirch.char && window.maplebirch.char.pet;
+    if (!pet || typeof pet.capture !== 'function') return;
+    var orig = pet.capture;
+    try {
+      pet.capture = function (mainModel) {
+        orig.call(this, mainModel);
+        try { repairCapturedPetLayers(mainModel); } catch (e) {}
+      };
+      petCapturePatched = true;
+    } catch (e) {}
+  }
+
   function resolveFrameworkPet() {
 
     ensureSidebarHook();
@@ -1704,8 +1851,8 @@
       var want = ours ? false : petPrev;
       if (!!opt.enabled !== want) {
         opt.enabled = want;
-        var pet = frameworkPet();
-        if (pet && typeof pet.sync === 'function') pet.sync();
+        var pet = frameworkPetHandle();
+        if (pet) pet.sync();
       }
     }
 
@@ -1724,7 +1871,7 @@
     bindState();
     ensureShell();
     ensureFollowPatch();
-    ensurePetCapturePatch();
+    ensureFrameworkPetRepair();
     apply();
 
     scheduleGameSync();
@@ -1772,7 +1919,7 @@
     if (!isBg() && !characterMounted()) resetRetryBudget();
 
     ensureFollowPatch();
-    ensurePetCapturePatch();
+    ensureFrameworkPetRepair();
 
     apply();
     if (entryPassages < 10 && !isBg()) {
@@ -2298,12 +2445,13 @@
 
         optionKey: 'V.options.sidebarAnimations',
         optionValue: V && V.options ? V.options.sidebarAnimations : undefined,
-        ourAnimated: frameworkAnimated(),
-        petMask: PET_MASK,
-        petRotation: PET_ROTATION,
-        petCapture: {
-          patched: petCapturePatched,
-          repairs: petLayerRepairs.slice(0)
+        ourAnimated: sidebarAnimOn(),
+        selfDraw: {
+          model: PET_MODEL_NAME,
+          layers: selfLayerKept + '/' + selfLayerTotal,
+          exactRules: LAYER_EXACT.length,
+          prefixRules: LAYER_PREFIX.length,
+          staticFallback: selfStaticFallback
         },
         follow: {
           patched: followPatched,
@@ -2336,15 +2484,20 @@
       },
       framework: {
         installed: !!mb,
-        petApi: !!frameworkPet(),
+        usedForRendering: false,
+        takeoverHandle: !!frameworkPetHandle(),
         petOptionEnabled: opt ? !!opt.enabled : null,
+        captureRepair: {
+          patched: petCapturePatched,
+          repairs: petLayerRepairs.slice(0)
+        },
         petElementChildren: (function () {
           var el = document.getElementById(FW_PET_ELEMENT_ID);
           return el ? el.childNodes.length : null;
         })()
       },
       canvasModels: CM
-        ? { main: !!CM.main, pet: CM.pet ? true : String(CM.pet) }
+        ? { main: !!CM.main, self: !!CM[PET_MODEL_NAME] }
         : null,
       sidebarCacheReady: !!sidebarCacheOptions(),
       gameReady: gameReady(),
